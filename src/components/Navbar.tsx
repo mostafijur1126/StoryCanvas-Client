@@ -69,9 +69,9 @@ export default function Navbar({ isLoggedIn = false }: NavbarProps) {
             {!isLoggedIn ? (
               <>
                 <Link
-                  href="/signin"
+                  href="/auth/signin"
                   className={`font-medium transition-colors ${
-                    isActive("/signin")
+                    isActive("/auth/signin")
                       ? "text-emerald-600 dark:text-emerald-400"
                       : "text-foreground/80 hover:text-emerald-600 dark:hover:text-emerald-400"
                   }`}
@@ -79,7 +79,7 @@ export default function Navbar({ isLoggedIn = false }: NavbarProps) {
                   Sign In
                 </Link>
                 <Link
-                  href="/register"
+                  href="/auth/register"
                   className="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-medium py-2 px-5 rounded-lg transition-colors shadow-sm hover:shadow-md"
                 >
                   Register
@@ -153,10 +153,10 @@ export default function Navbar({ isLoggedIn = false }: NavbarProps) {
               <>
                 <li className="mt-2 pt-2 border-t border-border/40">
                   <Link
-                    href="/signin"
+                    href="/auth/signin"
                     onClick={() => setIsMenuOpen(false)}
                     className={`block w-full py-2 px-3 rounded-lg text-center font-medium transition-colors ${
-                      isActive("/signin")
+                      isActive("/auth/signin")
                         ? "text-emerald-600 dark:text-emerald-400"
                         : "text-foreground/80 hover:text-emerald-600 dark:hover:text-emerald-400"
                     }`}
@@ -166,7 +166,7 @@ export default function Navbar({ isLoggedIn = false }: NavbarProps) {
                 </li>
                 <li>
                   <Link
-                    href="/register"
+                    href="/auth/register"
                     onClick={() => setIsMenuOpen(false)}
                     className="block w-full py-2.5 px-3 rounded-lg text-center bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-medium transition-colors"
                   >

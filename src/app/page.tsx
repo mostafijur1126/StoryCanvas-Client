@@ -1,5 +1,5 @@
-import Image from "next/image";
-import Banner from "@/components/Banner";
+import Banner from "@/components/homePage/Banner";
+import Stats from "@/components/homePage/Stats";
 export default function Home() {
   return (
     <main>
@@ -11,6 +11,7 @@ export default function Home() {
         badge="🔥 Trending"
         // backgroundImage="/images/hero-bg.jpg" // optional
       />
+      <Stats></Stats>
     </main>
   );
 }

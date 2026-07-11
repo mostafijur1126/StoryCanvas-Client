@@ -1,202 +1,210 @@
-// components/Navbar.tsx
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Button,
-  Avatar,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-} from "@heroui/react";
-import {
-  FiHome,
-  FiInfo,
-  FiMail,
-  FiBookOpen,
-  FiGrid,
-  FiMenu,
-  FiPlus,
-  FiUser,
-  FiLogOut,
-  FiSettings,
-} from "react-icons/fi";
-import { FaPenFancy } from "react-icons/fa";
+import { FiMenu, FiX } from "react-icons/fi";
 
-// Define routes for both states
-const loggedOutRoutes = [
-  { name: "Home", href: "/", icon: FiHome },
-  { name: "About", href: "/about", icon: FiInfo },
-  { name: "Contact", href: "/contact", icon: FiMail },
-];
+interface NavbarProps {
+  isLoggedIn?: boolean;
+}
 
-const loggedInRoutes = [
-  { name: "Home", href: "/", icon: FiHome },
-  { name: "Dashboard", href: "/dashboard", icon: FiGrid },
-  { name: "Stories", href: "/stories", icon: FiBookOpen },
-  { name: "Write", href: "/write", icon: FiPlus },
-  { name: "Profile", href: "/profile", icon: FiUser },
-];
-
-export default function Navbar() {
+export default function Navbar({ isLoggedIn = true }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // toggle for demo
   const pathname = usePathname();
 
-  const routes = isLoggedIn ? loggedInRoutes : loggedOutRoutes;
+  const loggedOutLinks = [
+    { label: "Explore", href: "/explore" },
+    { label: "About", href: "/about" },
+    { label: "Contact", href: "/contact" },
+  ];
 
-  // Toggle auth state (for demo purposes)
-  const handleAuthToggle = () => {
-    setIsLoggedIn(!isLoggedIn);
-    setIsMenuOpen(false);
-  };
+  const loggedInLinks = [
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Events", href: "/events" },
+    { label: "Explore", href: "/explore" },
+    { label: "About", href: "/about" },
+    { label: "Contact", href: "/contact" },
+  ];
+
+  const navLinks = isLoggedIn ? loggedInLinks : loggedOutLinks;
+
+  const isActive = (href: string) => pathname === href;
 
   return (
-    <header className="fixed top-0 z-50 w-full bg-white/90 dark:bg-stone-900/90 backdrop-blur-sm shadow-sm">
-      <div className="mx-auto flex max-w-full items-center justify-between px-4 py-3 md:px-6">
-        {/* Brand / Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-600">
-            <FaPenFancy className="text-base text-white" />
-          </div>
-          <span className="text-lg font-bold text-stone-800 dark:text-stone-100">
-            Story
-            <span className="text-amber-600 dark:text-amber-400">Canvas</span>
-          </span>
-        </Link>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-1 md:flex">
-          {routes.map((route) => {
-            const Icon = route.icon;
-            const active = pathname === route.href;
-            return (
-              <Link
-                key={route.name}
-                href={route.href}
-                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-                    : "text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
-                }`}
-              >
-                <Icon className="text-base" />
-                {route.name}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="flex items-center gap-2">
-          {isLoggedIn ? (
-            <Dropdown placement="bottom-end">
-              <DropdownTrigger>
-                <Avatar
-                  as="button"
-                  size="sm"
-                  src="https://i.pravatar.cc/150?u=a042581f4e29026704d"
-                  className="cursor-pointer ring-2 ring-transparent transition hover:ring-amber-400/60"
-                />
-              </DropdownTrigger>
-              <DropdownMenu aria-label="User menu" variant="flat">
-                <DropdownItem
-                  key="profile"
-                  startContent={<FiUser className="text-amber-500" />}
-                >
-                  Profile
-                </DropdownItem>
-                <DropdownItem
-                  key="settings"
-                  startContent={<FiSettings className="text-stone-500" />}
-                >
-                  Settings
-                </DropdownItem>
-                <DropdownItem
-                  key="logout"
-                  className="text-rose-600"
-                  startContent={<FiLogOut className="text-rose-500" />}
-                  onPress={handleAuthToggle}
-                >
-                  Logout
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          ) : (
-            <Button
-              as={Link}
-              href="/login"
-              size="sm"
-              className="bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm transition hover:shadow-amber-500/30"
-              onPress={() => setIsMenuOpen(false)}
-            >
-              Log In
-            </Button>
-          )}
-
-          <button
-            type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-700 transition hover:border-stone-300 hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-200 md:hidden"
-            aria-label="Toggle menu"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border/40 shadow-sm">
+      <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Brand */}
+          <Link
+            href="/"
+            className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
           >
-            <FiMenu className="text-xl" />
-          </button>
-        </div>
-      </div>
+            EventHive
+          </Link>
 
-      {isMenuOpen && (
-        <div className="md:hidden bg-white/95 dark:bg-stone-950/95 backdrop-blur-md border-t border-stone-200 dark:border-stone-800">
-          <div className="flex flex-col gap-1 px-4 py-4">
-            {routes.map((route) => {
-              const Icon = route.icon;
-              const active = pathname === route.href;
+          {/* Desktop Navigation */}
+          <ul className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => {
+              const active = isActive(link.href);
               return (
-                <Link
-                  key={route.name}
-                  href={route.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition ${
-                    active
-                      ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-                      : "text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800"
-                  }`}
-                >
-                  <Icon
-                    className={`text-xl ${active ? "text-amber-500" : "text-stone-400"}`}
-                  />
-                  {route.name}
-                </Link>
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className={`font-medium transition-colors ${
+                      active
+                        ? "text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400 pb-1"
+                        : "text-foreground/80 hover:text-emerald-600 dark:hover:text-emerald-400"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
               );
             })}
+          </ul>
 
-            <hr className="my-2 border-stone-200 dark:border-stone-800" />
-
-            {isLoggedIn ? (
-              <Button
-                fullWidth
-                className="mt-2 bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/30 dark:text-rose-400 dark:hover:bg-rose-950/50"
-                startContent={<FiLogOut className="text-rose-500" />}
-                onPress={handleAuthToggle}
-              >
-                Logout
-              </Button>
+          {/* Desktop Auth Buttons */}
+          <div className="hidden md:flex items-center gap-4">
+            {!isLoggedIn ? (
+              <>
+                <Link
+                  href="/signin"
+                  className={`font-medium transition-colors ${
+                    isActive("/signin")
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-foreground/80 hover:text-emerald-600 dark:hover:text-emerald-400"
+                  }`}
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-medium py-2 px-5 rounded-lg transition-colors shadow-sm hover:shadow-md"
+                >
+                  Register
+                </Link>
+              </>
             ) : (
-              <Button
-                as={Link}
-                href="/login"
-                fullWidth
-                className="mt-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md"
-                onPress={() => setIsMenuOpen(false)}
-              >
-                Log In
-              </Button>
+              <>
+                <Link
+                  href="/profile"
+                  className={`font-medium transition-colors ${
+                    isActive("/profile")
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-foreground/80 hover:text-emerald-600 dark:hover:text-emerald-400"
+                  }`}
+                >
+                  Profile
+                </Link>
+                <button
+                  onClick={() => console.log("Logout")}
+                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors"
+                >
+                  Logout
+                </button>
+              </>
             )}
           </div>
+
+          {/* Mobile toggle */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-muted/50 transition-colors"
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isMenuOpen}
+          >
+            {isMenuOpen ? (
+              <FiX className="w-6 h-6 text-foreground" />
+            ) : (
+              <FiMenu className="w-6 h-6 text-foreground" />
+            )}
+          </button>
         </div>
-      )}
+
+        {/* Mobile Menu */}
+        <div
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+            isMenuOpen ? "max-h-96 opacity-100 py-4" : "max-h-0 opacity-0"
+          }`}
+          aria-hidden={!isMenuOpen}
+        >
+          <ul className="flex flex-col gap-2 pb-4">
+            {navLinks.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`block w-full py-2 px-3 rounded-lg font-medium transition-colors ${
+                      active
+                        ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30"
+                        : "text-foreground/80 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-muted/50"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
+            {/* Mobile auth actions */}
+            {!isLoggedIn ? (
+              <>
+                <li className="mt-2 pt-2 border-t border-border/40">
+                  <Link
+                    href="/signin"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`block w-full py-2 px-3 rounded-lg text-center font-medium transition-colors ${
+                      isActive("/signin")
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-foreground/80 hover:text-emerald-600 dark:hover:text-emerald-400"
+                    }`}
+                  >
+                    Sign In
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/register"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block w-full py-2.5 px-3 rounded-lg text-center bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-medium transition-colors"
+                  >
+                    Register
+                  </Link>
+                </li>
+              </>
+            ) : (
+              <>
+                <li className="mt-2 pt-2 border-t border-border/40">
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`block w-full py-2 px-3 rounded-lg text-center font-medium transition-colors ${
+                      isActive("/profile")
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-foreground/80 hover:text-emerald-600 dark:hover:text-emerald-400"
+                    }`}
+                  >
+                    Profile
+                  </Link>
+                </li>
+                <li>
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      console.log("Logout");
+                    }}
+                    className="block w-full py-2.5 px-3 rounded-lg text-center text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors"
+                  >
+                    Logout
+                  </button>
+                </li>
+              </>
+            )}
+          </ul>
+        </div>
+      </nav>
     </header>
   );
 }

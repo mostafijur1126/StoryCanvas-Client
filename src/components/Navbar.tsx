@@ -9,7 +9,7 @@ interface NavbarProps {
   isLoggedIn?: boolean;
 }
 
-export default function Navbar({ isLoggedIn = true }: NavbarProps) {
+export default function Navbar({ isLoggedIn = false }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
 

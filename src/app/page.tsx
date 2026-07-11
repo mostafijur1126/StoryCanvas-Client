@@ -1,5 +1,6 @@
 import Banner from "@/components/homePage/Banner";
 import BrowseInterests from "@/components/homePage/BrowseInterests";
+import FeaturedGatherings from "@/components/homePage/FeaturedGatherings";
 import Stats from "@/components/homePage/Stats";
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       />
       <Stats></Stats>
       <BrowseInterests></BrowseInterests>
+      <FeaturedGatherings></FeaturedGatherings>
     </main>
   );
 }

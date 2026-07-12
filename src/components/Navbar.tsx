@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FiMenu, FiX } from "react-icons/fi";
 import { useSessionClient } from "@/core/session";
+import { authClient } from "@/lib/auth-client";
 
 export default function Navbar() {
   const { session, isPending, error } = useSessionClient();
@@ -12,6 +13,7 @@ export default function Navbar() {
   const user = session?.user; // Assuming the session object has a user property
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   const loggedOutLinks = [
     { label: "Explore", href: "/explore" },
@@ -30,6 +32,16 @@ export default function Navbar() {
   const navLinks = user ? loggedInLinks : loggedOutLinks;
 
   const isActive = (href: string) => pathname === href;
+
+  const handleLogout = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/auth/signin");
+        },
+      },
+    });
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border/40 shadow-sm">
@@ -98,7 +110,7 @@ export default function Navbar() {
                   Profile
                 </Link>
                 <button
-                  onClick={() => console.log("Logout")}
+                  onClick={handleLogout}
                   className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors"
                 >
                   Logout
@@ -193,7 +205,7 @@ export default function Navbar() {
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
-                      console.log("Logout");
+                      handleLogout();
                     }}
                     className="block w-full py-2.5 px-3 rounded-lg text-center text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors"
                   >

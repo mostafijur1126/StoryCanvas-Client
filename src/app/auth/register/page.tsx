@@ -4,6 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { FaGoogle } from "react-icons/fa";
 import { FiZap, FiGlobe, FiEye, FiEyeOff } from "react-icons/fi";
+import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -12,24 +15,28 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
     // ---------- API INTEGRATION ----------
-    // Replace with your actual registration endpoint:
-    // const res = await fetch('/api/auth/register', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ name, email, imageUrl, password }),
-    // });
-    // if (res.ok) { router.push('/signin'); }
-    console.log("Register attempt:", { name, email, imageUrl, password });
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const { data, error } = await authClient.signUp.email({
+      name, // required
+      email, // required
+      password, // required
+      image: imageUrl,
+    });
+    if (error) {
+      toast.error(`Registration failed: ${error.message}`);
+      return;
+    }
     setIsLoading(false);
-    alert("Registration successful! (demo)");
-    // Reset form or redirect
+    if (data) {
+      toast.success("Registration successful!");
+      router.push("/");
+    }
   };
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);

@@ -4,12 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FiMenu, FiX } from "react-icons/fi";
+import { useSessionClient } from "@/core/session";
 
-interface NavbarProps {
-  isLoggedIn?: boolean;
-}
+export default function Navbar() {
+  const { session, isPending, error } = useSessionClient();
 
-export default function Navbar({ isLoggedIn = false }: NavbarProps) {
+  const user = session?.user; // Assuming the session object has a user property
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
 
@@ -27,7 +27,7 @@ export default function Navbar({ isLoggedIn = false }: NavbarProps) {
     { label: "Contact", href: "/contact" },
   ];
 
-  const navLinks = isLoggedIn ? loggedInLinks : loggedOutLinks;
+  const navLinks = user ? loggedInLinks : loggedOutLinks;
 
   const isActive = (href: string) => pathname === href;
 
@@ -66,7 +66,7 @@ export default function Navbar({ isLoggedIn = false }: NavbarProps) {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            {!isLoggedIn ? (
+            {!user ? (
               <>
                 <Link
                   href="/auth/signin"
@@ -149,7 +149,7 @@ export default function Navbar({ isLoggedIn = false }: NavbarProps) {
               );
             })}
             {/* Mobile auth actions */}
-            {!isLoggedIn ? (
+            {!user ? (
               <>
                 <li className="mt-2 pt-2 border-t border-border/40">
                   <Link

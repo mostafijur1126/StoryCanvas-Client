@@ -6,9 +6,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { FiMenu, FiX } from "react-icons/fi";
 import { useSessionClient } from "@/core/session";
 import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
 export default function Navbar() {
-  const { session, isPending, error } = useSessionClient();
+  const { session } = useSessionClient();
 
   const user = session?.user; // Assuming the session object has a user property
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,6 +38,7 @@ export default function Navbar() {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
+          toast.success("Logged out successfully!");
           router.push("/auth/signin");
         },
       },

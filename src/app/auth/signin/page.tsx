@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { FaGoogle } from "react-icons/fa";
 import { FiZap, FiGlobe, FiEye, FiEyeOff } from "react-icons/fi";
+import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -17,17 +19,21 @@ export default function SignInPage() {
     setIsLoading(true);
 
     // ---------- API INTEGRATION ----------
-    // Replace with your actual sign-in endpoint:
-    // const res = await fetch('/api/auth/signin', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ email, password, rememberMe }),
-    // });
-    // if (res.ok) { router.push('/dashboard'); }
-    console.log("Sign in attempt:", { email, password, rememberMe });
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    alert("Sign in successful! (demo)");
+    const { data, error } = await authClient.signIn.email({
+      email,
+      password,
+      rememberMe,
+      callbackURL: "/",
+    });
+    if (error) {
+      toast.error(`Sign in failed: ${error.message}`);
+      setIsLoading(false);
+      return;
+    }
+    if (data) {
+      toast.success("Sign in successful!");
+      setIsLoading(false);
+    }
   };
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);

@@ -24,7 +24,7 @@ export default function Navbar() {
 
   const loggedInLinks = [
     { label: "Dashboard", href: "/dashboard" },
-    { label: "Events", href: "/events" },
+    { label: "Events", href: "/create-event" },
     { label: "Explore", href: "/explore" },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },

@@ -5,10 +5,6 @@ const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 // The endpoint Cloudinary exposes for unsigned image uploads
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
-/**
- * Shape of the response Cloudinary sends back after a successful upload.
- * (Trimmed down to the fields we actually use — Cloudinary returns more.)
- */
 export interface CloudinaryUploadResult {
   secure_url: string; // the HTTPS URL of the uploaded image
   public_id: string; // Cloudinary's unique id for the asset (useful for deleting later)
@@ -17,13 +13,6 @@ export interface CloudinaryUploadResult {
   format: string;
 }
 
-/**
- * Uploads a single image File to Cloudinary using an UNSIGNED upload preset.
- * Returns the Cloudinary result (most importantly `secure_url`) on success.
- *
- * Throws an Error if config is missing or the upload fails, so callers
- * can catch it and show a toast/error message.
- */
 export async function uploadImageToCloudinary(
   file: File,
 ): Promise<CloudinaryUploadResult> {

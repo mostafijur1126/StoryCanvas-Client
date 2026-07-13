@@ -1,25 +1,4 @@
 "use client";
-
-/**
- * app/create-event/page.tsx
- * ---------------------------------------------------------------------------
- * "Create New Event" page.
- *
- * Layout (matches the provided design):
- *  - Header: back button, page title, "Save Draft" / "Publish Event" buttons
- *  - Left column (main form): Basic Information, Date & Time, Location,
- *    Description, Media (drag & drop image upload), Pricing
- *  - Right column (sidebar): Step Progress, Visibility, Pro Tip
- *
- * NOTE ON SUBMISSION:
- * There is no backend endpoint yet. Both "Save Draft" and "Publish Event"
- * currently just console.log the full form payload so you can see exactly
- * what will be sent once you wire up your POST API route. Look for the
- * `handleSubmit` function below — that's the one spot to change later
- * (e.g. replace console.log with `await fetch("/api/events", ...)`).
- * ---------------------------------------------------------------------------
- */
-
 import { useState } from "react";
 import toast from "react-hot-toast";
 import {
@@ -37,10 +16,6 @@ import {
 import ImageDropzone from "@/components/ui/ImageDropzone";
 import { EventFormData, emptyEventFormData, Visibility } from "@/types/event";
 
-// The 4 wizard steps shown in the "Step Progress" sidebar card.
-// This page only implements step 1 (Basic Info) as a single scrollable
-// form — the other steps are shown as "upcoming" for visual context,
-// matching the reference design.
 const STEPS = ["Basic Info", "Logistics", "Details & Media", "Pricing"];
 
 export default function CreateEventPage() {
@@ -76,7 +51,7 @@ export default function CreateEventPage() {
    *     body: JSON.stringify({ ...formData, status }),
    *   });
    */
-  const handleSubmit = (status: "draft" | "published") => {
+  const handleSubmit = async (status: "draft" | "published") => {
     // Minimal required-field check just for the "Publish" action
     if (status === "published" && !formData.title.trim()) {
       toast.error("Please add an event title before publishing");
@@ -86,7 +61,12 @@ export default function CreateEventPage() {
     const payload = { ...formData, status };
 
     // ---- This is where you will call your POST API later ----
-    console.log("Event form payload:", payload);
+    const result = await fetch(`${process.env.NEXT_PUBLIC_URL}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    await result.json();
     // ------------------------------------------------------------
 
     toast.success(

@@ -2,7 +2,10 @@ import { betterAuth } from "better-auth";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 
-const client = new MongoClient(process.env.MONGODB_URI);
+const mongoUri =
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/event-hive";
+
+const client = new MongoClient(mongoUri);
 const db = client.db("event-hive");
 
 export const auth = betterAuth({

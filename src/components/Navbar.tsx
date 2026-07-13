@@ -23,7 +23,7 @@ export default function Navbar() {
   ];
 
   const loggedInLinks = [
-    { label: "Dashboard", href: "/dashboard" },
+    { label: "Manage", href: "/manage" },
     { label: "Events", href: "/create-event" },
     { label: "Explore", href: "/explore" },
     { label: "About", href: "/about" },

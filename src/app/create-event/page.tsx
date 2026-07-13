@@ -14,12 +14,18 @@ import {
   FiInfo,
 } from "react-icons/fi";
 import ImageDropzone from "@/components/ui/ImageDropzone";
+import { useSessionClient } from "@/core/session";
 import { EventFormData, emptyEventFormData, Visibility } from "@/types/event";
 
 const STEPS = ["Basic Info", "Logistics", "Details & Media", "Pricing"];
 
 export default function CreateEventPage() {
   const [formData, setFormData] = useState<EventFormData>(emptyEventFormData);
+  const { session } = useSessionClient();
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_URL ||
+    "http://localhost:5000";
 
   /** Generic helper to update a single field in the form state */
   const updateField = <K extends keyof EventFormData>(
@@ -58,10 +64,15 @@ export default function CreateEventPage() {
       return;
     }
 
-    const payload = { ...formData, status };
+    const payload = {
+      ...formData,
+      status,
+      createdBy: session?.user?.id || session?.user?.email || "anonymous",
+      createdAt: new Date().toISOString(),
+    };
 
     // ---- This is where you will call your POST API later ----
-    const result = await fetch(`${process.env.NEXT_PUBLIC_URL}/events`, {
+    const result = await fetch(`${baseUrl}/events`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

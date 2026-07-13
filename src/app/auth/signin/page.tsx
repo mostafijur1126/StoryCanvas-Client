@@ -6,6 +6,7 @@ import { FaGoogle } from "react-icons/fa";
 import { FiZap, FiGlobe, FiEye, FiEyeOff } from "react-icons/fi";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,8 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +35,9 @@ export default function SignInPage() {
     }
     if (data) {
       toast.success("Sign in successful!");
+      const redirectTo = searchParams.get("redirect") || "/";
+      router.push(redirectTo);
+      router.refresh();
       setIsLoading(false);
     }
   };

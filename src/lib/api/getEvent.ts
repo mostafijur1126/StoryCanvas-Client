@@ -5,7 +5,9 @@ const baseUrl =
 
 export const getEvent = async (id: string) => {
   try {
-    const response = await fetch(`${baseUrl}/events/${id}`);
+    const response = await fetch(`${baseUrl}/events/${id}`, {
+      credentials: "include",
+    });
     if (!response.ok) {
       throw new Error("Failed to fetch event");
     }
@@ -21,7 +23,9 @@ export const getMyEvents = async (userId?: string | null) => {
     const url = userId
       ? `${baseUrl}/events/my-events/${encodeURIComponent(userId)}`
       : `${baseUrl}/events`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      credentials: "include",
+    });
     if (!response.ok) {
       throw new Error("Failed to fetch events");
     }
@@ -36,6 +40,7 @@ export const deleteEvent = async (id: string) => {
   try {
     const response = await fetch(`${baseUrl}/events/${id}`, {
       method: "DELETE",
+      credentials: "include",
     });
     if (!response.ok) {
       throw new Error("Failed to delete event");

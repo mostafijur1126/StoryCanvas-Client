@@ -1,158 +1,167 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { FiSearch, FiCalendar, FiMapPin, FiStar } from "react-icons/fi";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { FiCalendar, FiMapPin, FiSearch, FiStar } from "react-icons/fi";
+import type { Event } from "@/types/event";
 
-// ---------- Demo Data ----------
-// Replace this with a real API call later (see comments below)
-const DEMO_EVENTS = [
-  {
-    id: 1,
-    title: "Future AI Summit 2024",
-    date: "Oct 12, 2024",
-    location: "San Francisco, CA",
-    price: 199,
-    rating: 4.9,
-    category: "Tech & AI",
-    description: "The largest AI conference of the year.",
-  },
-  {
-    id: 2,
-    title: "Mastering Minimalist Design",
-    date: "Nov 05, 2024",
-    location: "London, UK",
-    price: 85,
-    rating: 4.7,
-    category: "Workshops",
-    description: "Hands-on design workshop.",
-  },
-  {
-    id: 3,
-    title: "SaaS Growth Expo",
-    date: "Dec 18, 2024",
-    location: "New York, NY",
-    price: 0,
-    rating: 5.0,
-    category: "Business & Networking",
-    description: "Scaling strategies from top founders.",
-  },
-  {
-    id: 4,
-    title: "Digital Art Vernissage",
-    date: "Jan 12, 2025",
-    location: "Berlin, DE",
-    price: 45,
-    rating: 4.8,
-    category: "Art & Culture",
-    description: "Exploring generative AI in art.",
-  },
-  // Add more events for demo (at least 20 for pagination)
-  ...Array.from({ length: 16 }, (_, i) => ({
-    id: i + 5,
-    title: `Event ${i + 5}`,
-    date: `2024-${String(10 + (i % 3)).padStart(2, "0")}-${String(10 + i).padStart(2, "0")}`,
-    location: ["New York", "London", "Berlin", "Paris", "Tokyo"][i % 5],
-    price: Math.floor(Math.random() * 500) + 20,
-    rating: (3 + Math.random() * 2).toFixed(1),
-    category: [
-      "Tech & AI",
-      "Workshops",
-      "Business & Networking",
-      "Art & Culture",
-    ][i % 4],
-    description: "A great event to attend.",
-  })),
-];
+const DEFAULT_PRICE_LIMIT = 500;
+const ITEMS_PER_PAGE = 4;
 
-// ---------- Types ----------
-interface Event {
-  id: number;
-  title: string;
-  date: string;
-  location: string;
-  price: number;
-  rating: number;
-  category: string;
-  description: string;
+function normalizeEvent(event: Event | Record<string, unknown>): Event {
+  const ticketPrice =
+    typeof event.ticketPrice === "number"
+      ? event.ticketPrice
+      : typeof event.ticketPrice === "string"
+        ? Number(event.ticketPrice)
+        : typeof event.price === "number"
+          ? event.price
+          : typeof event.price === "string"
+            ? Number(event.price)
+            : 0;
+
+  const startDate =
+    (typeof event.startDate === "string" && event.startDate) ||
+    (typeof event.date === "string" && event.date) ||
+    "";
+
+  const venue =
+    (typeof event.venue === "string" && event.venue) ||
+    (typeof event.location === "string" && event.location) ||
+    "TBA";
+
+  return {
+    id: String(event.id ?? event._id ?? ""),
+    _id: typeof event._id === "string" ? event._id : undefined,
+    title: typeof event.title === "string" ? event.title : "Untitled Event",
+    description:
+      typeof event.description === "string"
+        ? event.description
+        : "No description provided yet.",
+    category:
+      typeof event.category === "string" && event.category.trim()
+        ? event.category
+        : "Other",
+    date: startDate,
+    startDate,
+    venue,
+    location: venue,
+    price: ticketPrice,
+    ticketPrice,
+    rating: typeof event.rating === "number" ? event.rating : 4.5,
+    coverImageUrl:
+      typeof event.coverImageUrl === "string" ? event.coverImageUrl : undefined,
+    status: typeof event.status === "string" ? event.status : undefined,
+  };
 }
 
-// ---------- Main Page ----------
 export default function ExplorePage() {
-  // State
-  const [events, setEvents] = useState<Event[]>(DEMO_EVENTS);
+  const [events, setEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [locationFilter, setLocationFilter] = useState("All Locations");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [priceMin, setPriceMin] = useState(0);
-  const [priceMax, setPriceMax] = useState(500);
+  const [priceMax, setPriceMax] = useState(DEFAULT_PRICE_LIMIT);
   const [sortBy, setSortBy] = useState("latest");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
 
-  // Derived unique categories and locations for filters
-  const allCategories = Array.from(new Set(events.map((e) => e.category)));
-  const allLocations = Array.from(new Set(events.map((e) => e.location)));
+  const normalizedEvents = useMemo(() => events.map(normalizeEvent), [events]);
 
-  // Filter and sort logic
+  const allCategories = useMemo(
+    () =>
+      Array.from(
+        new Set(normalizedEvents.map((event) => event.category || "Other")),
+      ).sort(),
+    [normalizedEvents],
+  );
+
+  const allLocations = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          normalizedEvents
+            .map((event) => event.location || event.venue || "TBA")
+            .filter(Boolean),
+        ),
+      ).sort(),
+    [normalizedEvents],
+  );
+
   const filteredEvents = useMemo(() => {
-    let filtered = [...events];
+    let filtered = [...normalizedEvents];
 
-    // Search (title or description)
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(
-        (e) =>
-          e.title.toLowerCase().includes(q) ||
-          e.description.toLowerCase().includes(q) ||
-          e.category.toLowerCase().includes(q),
-      );
+      filtered = filtered.filter((event) => {
+        const searchable = [
+          event.title,
+          event.description,
+          event.category,
+          event.venue,
+          event.location,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+
+        return searchable.includes(q);
+      });
     }
 
-    // Category filter (multi-select)
     if (selectedCategories.length > 0) {
-      filtered = filtered.filter((e) =>
-        selectedCategories.includes(e.category),
+      filtered = filtered.filter((event) =>
+        selectedCategories.includes(event.category || "Other"),
       );
     }
 
-    // Location filter
     if (locationFilter !== "All Locations") {
-      filtered = filtered.filter((e) => e.location === locationFilter);
+      filtered = filtered.filter(
+        (event) => (event.location || event.venue || "TBA") === locationFilter,
+      );
     }
 
-    // Date range (parse dates)
     if (dateFrom) {
-      const from = new Date(dateFrom);
-      filtered = filtered.filter((e) => new Date(e.date) >= from);
+      filtered = filtered.filter(
+        (event) => (event.startDate || "") >= dateFrom,
+      );
     }
+
     if (dateTo) {
-      const to = new Date(dateTo);
-      filtered = filtered.filter((e) => new Date(e.date) <= to);
+      filtered = filtered.filter((event) => (event.startDate || "") <= dateTo);
     }
 
-    // Price range
-    filtered = filtered.filter(
-      (e) => e.price >= priceMin && e.price <= priceMax,
-    );
+    const minPrice = Number(priceMin) || 0;
+    const maxPrice = Number(priceMax) || DEFAULT_PRICE_LIMIT;
+    filtered = filtered.filter((event) => {
+      const price = Number(event.ticketPrice ?? event.price ?? 0);
+      return price >= minPrice && price <= maxPrice;
+    });
 
-    // Sort
     if (sortBy === "latest") {
-      filtered.sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      filtered.sort((a, b) =>
+        (b.startDate || "").localeCompare(a.startDate || ""),
       );
     } else if (sortBy === "price-low") {
-      filtered.sort((a, b) => a.price - b.price);
+      filtered.sort(
+        (a, b) =>
+          Number(a.ticketPrice ?? a.price ?? 0) -
+          Number(b.ticketPrice ?? b.price ?? 0),
+      );
     } else if (sortBy === "price-high") {
-      filtered.sort((a, b) => b.price - a.price);
+      filtered.sort(
+        (a, b) =>
+          Number(b.ticketPrice ?? b.price ?? 0) -
+          Number(a.ticketPrice ?? a.price ?? 0),
+      );
     } else if (sortBy === "rating") {
-      filtered.sort((a, b) => b.rating - a.rating);
+      filtered.sort((a, b) => Number(b.rating ?? 0) - Number(a.rating ?? 0));
     }
 
     return filtered;
   }, [
-    events,
+    normalizedEvents,
     searchQuery,
     selectedCategories,
     locationFilter,
@@ -163,18 +172,19 @@ export default function ExplorePage() {
     sortBy,
   ]);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredEvents.length / itemsPerPage);
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredEvents.length / ITEMS_PER_PAGE),
+  );
   const paginatedEvents = filteredEvents.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
   );
 
-  // Handlers
   const toggleCategory = (category: string) => {
     setSelectedCategories((prev) =>
       prev.includes(category)
-        ? prev.filter((c) => c !== category)
+        ? prev.filter((value) => value !== category)
         : [...prev, category],
     );
     setCurrentPage(1);
@@ -187,23 +197,51 @@ export default function ExplorePage() {
     setDateFrom("");
     setDateTo("");
     setPriceMin(0);
-    setPriceMax(500);
+    setPriceMax(DEFAULT_PRICE_LIMIT);
     setCurrentPage(1);
   };
 
-  // For API integration later:
-  // useEffect(() => {
-  //   async function fetchEvents() {
-  //     const res = await fetch('/api/events?' + new URLSearchParams({ ... }));
-  //     const data = await res.json();
-  //     setEvents(data);
-  //   }
-  //   fetchEvents();
-  // }, [/* dependencies */]);
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_URL || "http://localhost:5000"}/events`,
+          {
+            method: "GET",
+            headers: { Accept: "application/json" },
+            cache: "no-store",
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load events");
+        }
+
+        const result = await response.json();
+        const payload = Array.isArray(result) ? result : (result?.data ?? []);
+
+        if (isActive) {
+          setEvents(Array.isArray(payload) ? payload : []);
+        }
+      } catch (error) {
+        console.error("Failed to load events", error);
+        if (isActive) {
+          setEvents([]);
+        }
+      }
+    };
+
+    fetchEvents();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
           Discover Next Experiences
@@ -215,26 +253,24 @@ export default function ExplorePage() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Sidebar Filters */}
-        <aside className="w-full lg:w-64 flex-shrink-0">
+        <aside className="w-full lg:w-64 shrink-0">
           <div className="sticky top-20 space-y-6 bg-background/60 backdrop-blur-sm border border-border/60 rounded-xl p-6 shadow-sm">
-            {/* Categories */}
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/50 mb-3">
                 Categories
               </h3>
               <ul className="space-y-2">
-                {allCategories.map((cat) => (
-                  <li key={cat}>
+                {allCategories.map((category) => (
+                  <li key={category}>
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={selectedCategories.includes(cat)}
-                        onChange={() => toggleCategory(cat)}
+                        checked={selectedCategories.includes(category)}
+                        onChange={() => toggleCategory(category)}
                         className="rounded border-border text-emerald-600 focus:ring-emerald-500"
                       />
                       <span className="text-foreground/70 hover:text-foreground transition-colors">
-                        {cat}
+                        {category}
                       </span>
                     </label>
                   </li>
@@ -242,29 +278,27 @@ export default function ExplorePage() {
               </ul>
             </div>
 
-            {/* Location */}
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/50 mb-3">
                 Location
               </h3>
               <select
                 value={locationFilter}
-                onChange={(e) => {
-                  setLocationFilter(e.target.value);
+                onChange={(event) => {
+                  setLocationFilter(event.target.value);
                   setCurrentPage(1);
                 }}
                 className="w-full px-3 py-2 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <option value="All Locations">All Locations</option>
-                {allLocations.map((loc) => (
-                  <option key={loc} value={loc}>
-                    {loc}
+                {allLocations.map((location) => (
+                  <option key={location} value={location}>
+                    {location}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Date Range */}
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/50 mb-3">
                 Date Range
@@ -273,8 +307,8 @@ export default function ExplorePage() {
                 <input
                   type="date"
                   value={dateFrom}
-                  onChange={(e) => {
-                    setDateFrom(e.target.value);
+                  onChange={(event) => {
+                    setDateFrom(event.target.value);
                     setCurrentPage(1);
                   }}
                   className="flex-1 px-3 py-2 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -282,8 +316,8 @@ export default function ExplorePage() {
                 <input
                   type="date"
                   value={dateTo}
-                  onChange={(e) => {
-                    setDateTo(e.target.value);
+                  onChange={(event) => {
+                    setDateTo(event.target.value);
                     setCurrentPage(1);
                   }}
                   className="flex-1 px-3 py-2 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -291,7 +325,6 @@ export default function ExplorePage() {
               </div>
             </div>
 
-            {/* Price Range */}
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/50 mb-3">
                 Price Range
@@ -301,11 +334,11 @@ export default function ExplorePage() {
                 <input
                   type="range"
                   min={0}
-                  max={500}
+                  max={DEFAULT_PRICE_LIMIT}
                   step={10}
                   value={priceMax}
-                  onChange={(e) => {
-                    setPriceMax(Number(e.target.value));
+                  onChange={(event) => {
+                    setPriceMax(Number(event.target.value));
                     setCurrentPage(1);
                   }}
                   className="flex-1 accent-emerald-600"
@@ -317,8 +350,8 @@ export default function ExplorePage() {
                   type="number"
                   placeholder="Min"
                   value={priceMin}
-                  onChange={(e) => {
-                    setPriceMin(Number(e.target.value));
+                  onChange={(event) => {
+                    setPriceMin(Number(event.target.value));
                     setCurrentPage(1);
                   }}
                   className="w-1/2 px-3 py-2 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -327,8 +360,8 @@ export default function ExplorePage() {
                   type="number"
                   placeholder="Max"
                   value={priceMax}
-                  onChange={(e) => {
-                    setPriceMax(Number(e.target.value));
+                  onChange={(event) => {
+                    setPriceMax(Number(event.target.value));
                     setCurrentPage(1);
                   }}
                   className="w-1/2 px-3 py-2 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -336,7 +369,6 @@ export default function ExplorePage() {
               </div>
             </div>
 
-            {/* Reset */}
             <button
               onClick={resetFilters}
               className="w-full py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
@@ -346,18 +378,16 @@ export default function ExplorePage() {
           </div>
         </aside>
 
-        {/* Main Content */}
         <div className="flex-1">
-          {/* Search & Sort */}
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
             <div className="relative w-full sm:max-w-md">
               <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
               <input
                 type="text"
-                placeholder="Search events, organizers, or tags..."
+                placeholder="Search events, categories, or venues..."
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
                   setCurrentPage(1);
                 }}
                 className="w-full pl-10 pr-4 py-2 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -367,8 +397,8 @@ export default function ExplorePage() {
               <span className="text-sm text-foreground/60">Sort by:</span>
               <select
                 value={sortBy}
-                onChange={(e) => {
-                  setSortBy(e.target.value);
+                onChange={(event) => {
+                  setSortBy(event.target.value);
                   setCurrentPage(1);
                 }}
                 className="px-3 py-2 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -381,7 +411,6 @@ export default function ExplorePage() {
             </div>
           </div>
 
-          {/* Event Grid */}
           {paginatedEvents.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-foreground/60">
@@ -391,12 +420,11 @@ export default function ExplorePage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {paginatedEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
+                <EventCard key={event.id || event.title} event={event} />
               ))}
             </div>
           )}
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-8 flex justify-center">
               <Pagination
@@ -412,51 +440,88 @@ export default function ExplorePage() {
   );
 }
 
-// ---------- Sub-components ----------
-
-// Event Card
 function EventCard({ event }: { event: Event }) {
+  const price = Number(event.ticketPrice ?? event.price ?? 0);
+  const displayDate = event.startDate || event.date || "TBA";
+  const displayLocation = event.location || event.venue || "TBA";
+
+  const formattedDate = (() => {
+    if (!displayDate || displayDate === "TBA") return "TBA";
+    const parsed = new Date(displayDate);
+    if (isNaN(parsed.getTime())) return displayDate;
+    return parsed.toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  })();
+
   return (
-    <div className="group bg-background/60 backdrop-blur-sm border border-border/60 rounded-xl p-5 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-emerald-300 dark:hover:border-emerald-700">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-            <FiStar className="w-4 h-4 fill-current" />
-            <span>{event.rating}</span>
+    <div className="group bg-background/60 backdrop-blur-sm border border-border/60 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-emerald-300 dark:hover:border-emerald-700">
+      {/* Image */}
+      <div className="relative h-44 w-full overflow-hidden bg-muted">
+        {event.coverImageUrl ? (
+          <img
+            src={event.coverImageUrl}
+            alt={event.title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-950/40 dark:to-emerald-900/20">
+            <FiCalendar className="w-10 h-10 text-emerald-400" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors mt-1">
-            {event.title}
-          </h3>
-        </div>
-        <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-          {event.price === 0 ? "Free" : `$${event.price}`}
+        )}
+
+        {/* Category badge */}
+        <span className="absolute top-3 left-3 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide bg-background/90 backdrop-blur-sm text-emerald-700 dark:text-emerald-400 rounded-full shadow-sm">
+          {event.category || "Other"}
+        </span>
+
+        {/* Price badge */}
+        <span className="absolute top-3 right-3 px-2.5 py-1 text-xs font-bold bg-emerald-600 dark:bg-emerald-500 text-white rounded-full shadow-sm">
+          {price === 0 ? "Free" : `$${price}`}
         </span>
       </div>
 
-      <div className="mt-3 space-y-1 text-sm text-foreground/60">
-        <div className="flex items-center gap-1.5">
-          <FiCalendar className="w-4 h-4" />
-          <span>{event.date}</span>
+      {/* Content */}
+      <div className="p-5">
+        <div className="flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+          <FiStar className="w-4 h-4 fill-current" />
+          <span>{Number(event.rating ?? 4.5).toFixed(1)}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <FiMapPin className="w-4 h-4" />
-          <span>{event.location}</span>
-        </div>
-      </div>
 
-      <div className="mt-4 pt-4 border-t border-border/40 flex justify-end">
-        <a
-          href={`/events/${event.id}`}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-600 dark:border-emerald-400 rounded-lg hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 transition-colors"
-        >
-          View Details
-        </a>
+        <h3 className="text-lg font-semibold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors mt-1 line-clamp-1">
+          {event.title}
+        </h3>
+
+        <p className="text-sm text-foreground/60 mt-2 line-clamp-2">
+          {event.description}
+        </p>
+
+        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-foreground/60">
+          <div className="flex items-center gap-1.5">
+            <FiCalendar className="w-4 h-4" />
+            <span>{formattedDate}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <FiMapPin className="w-4 h-4" />
+            <span className="truncate max-w-[140px]">{displayLocation}</span>
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-border/40">
+          <Link
+            href={event.id ? `/explore/${event.id}` : "/create-event"}
+            className="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-600 dark:border-emerald-400 rounded-lg hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 transition-colors"
+          >
+            View Details
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
 
-// Pagination Component
 function Pagination({
   currentPage,
   totalPages,
@@ -466,11 +531,11 @@ function Pagination({
   totalPages: number;
   onPageChange: (page: number) => void;
 }) {
-  const pages = Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-    if (totalPages <= 5) return i + 1;
-    if (currentPage <= 3) return i + 1;
-    if (currentPage >= totalPages - 2) return totalPages - 4 + i;
-    return currentPage - 2 + i;
+  const pages = Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
+    if (totalPages <= 5) return index + 1;
+    if (currentPage <= 3) return index + 1;
+    if (currentPage >= totalPages - 2) return totalPages - 4 + index;
+    return currentPage - 2 + index;
   });
 
   return (

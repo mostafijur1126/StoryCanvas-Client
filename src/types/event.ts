@@ -1,5 +1,28 @@
 export type Visibility = "public" | "private";
 
+export interface Event {
+  id: string;
+  _id?: string;
+  title: string;
+  description: string;
+  category?: string;
+  date?: string;
+  startDate?: string;
+  startTime?: string;
+  endDate?: string;
+  endTime?: string;
+  venue?: string;
+  location?: string;
+  price?: string | number;
+  ticketPrice?: string | number;
+  coverImageUrl?: string;
+  coverImagePublicId?: string;
+  rating?: number;
+  status?: string;
+  totalCapacity?: string;
+  visibility?: Visibility;
+}
+
 export interface EventFormData {
   // Basic Information
   title: string;

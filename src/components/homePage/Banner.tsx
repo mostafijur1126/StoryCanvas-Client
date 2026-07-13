@@ -3,7 +3,21 @@
 import { useState } from "react";
 import { FiSearch, FiCalendar, FiMapPin } from "react-icons/fi";
 
-export default function Banner() {
+interface BannerProps {
+  title?: string;
+  subtitle?: string;
+  primaryText?: string;
+  secondaryText?: string;
+  badge?: string;
+}
+
+export default function Banner({
+  title = "Discover Events That Shape Your Future",
+  subtitle = "Connect with industry leaders, pioneers, and creative minds at the world's premier gatherings. Curated for the ambitious.",
+  primaryText = "Explore Now",
+  secondaryText = "Watch Demo",
+  badge = "Evolution Through Experience",
+}: BannerProps) {
   const [keyword, setKeyword] = useState("");
   const [date, setDate] = useState("");
   const [location, setLocation] = useState("");
@@ -19,18 +33,17 @@ export default function Banner() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {/* Eyebrow */}
         <p className="inline-block text-xs sm:text-sm font-semibold tracking-widest uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-100/60 dark:bg-emerald-900/30 px-4 py-1.5 rounded-full mb-6">
-          Evolution Through Experience
+          {badge}
         </p>
 
         {/* Main Heading */}
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight max-w-4xl mx-auto">
-          Discover Events That Shape Your Future
+          {title}
         </h1>
 
         {/* Description */}
         <p className="mt-4 text-base sm:text-lg text-foreground/70 max-w-2xl mx-auto leading-relaxed">
-          Connect with industry leaders, pioneers, and creative minds at the
-          world's premier gatherings. Curated for the ambitious.
+          {subtitle}
         </p>
 
         {/* CTA Buttons */}
@@ -39,13 +52,13 @@ export default function Banner() {
             href="/explore"
             className="inline-flex items-center justify-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
           >
-            Explore Now
+            {primaryText}
           </a>
           <a
             href="#"
             className="inline-flex items-center justify-center px-6 py-3 border border-emerald-600 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-medium rounded-lg transition-colors"
           >
-            Watch Demo
+            {secondaryText}
           </a>
         </div>
 

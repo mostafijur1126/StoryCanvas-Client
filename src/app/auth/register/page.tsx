@@ -6,7 +6,7 @@ import { FaGoogle } from "react-icons/fa";
 import { FiZap, FiGlobe, FiEye, FiEyeOff } from "react-icons/fi";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -16,6 +16,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -36,6 +37,20 @@ export default function RegisterPage() {
     if (data) {
       toast.success("Registration successful!");
       router.push("/");
+    }
+  };
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      const redirectUrl = searchParams.get("redirect") || "/";
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: redirectUrl,
+      });
+    } catch (error) {
+      console.error("Google login error:", error);
+      toast.error("Google login failed. Please try again.");
+      setIsLoading(false);
     }
   };
 
@@ -109,6 +124,7 @@ export default function RegisterPage() {
 
           {/* Social Sign Up - Google only */}
           <button
+            onClick={handleGoogleLogin}
             type="button"
             className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-border/60 rounded-lg hover:bg-muted/50 transition-colors text-foreground/80 font-medium"
           >

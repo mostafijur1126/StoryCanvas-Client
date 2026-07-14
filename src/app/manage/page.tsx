@@ -152,9 +152,14 @@ const ManagePage = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [view, setView] = useState<"table" | "grid">("table");
   const [loading, setLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const { session } = useSessionClient();
   const userId = session?.user?.id;
   const [events, setEvents] = useState<ManagedEvent[]>([]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -162,7 +167,14 @@ const ManagePage = () => {
     const fetchEvents = async () => {
       setLoading(true);
       try {
+        console.log("Fetching events for userId:", userId);
+        if (!userId) {
+          console.warn("userId is not available yet, skipping fetch");
+          setLoading(false);
+          return;
+        }
         const res = await getMyEvents(userId);
+        console.log("Events response:", res);
         const payload = Array.isArray(res?.data)
           ? res.data
           : Array.isArray(res)
@@ -210,167 +222,246 @@ const ManagePage = () => {
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 md:px-8">
-      <div className="mx-auto max-w-6xl">
-        {/* Header */}
-        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              Manage Events
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Monitor, edit, and organize your upcoming experiences.
-            </p>
-          </div>
-
-          <Link
-            href="/create-event"
-            className="inline-flex h-fit items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
-          >
-            <Plus className="h-4 w-4" />
-            Create New Event
-          </Link>
+      {!isMounted && (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-muted-foreground">Loading...</div>
         </div>
-
-        {/* Stat cards */}
-        <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {statCards(events).map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-xl border border-border/40 bg-card p-4"
-            >
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
-              <p className={`mt-1 text-xl font-bold ${stat.color}`}>
-                {stat.value}
+      )}
+      {isMounted && (
+        <div className="mx-auto max-w-6xl">
+          {/* Header */}
+          <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                Manage Events
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Monitor, edit, and organize your upcoming experiences.
               </p>
             </div>
-          ))}
-        </div>
 
-        {/* Tabs + view toggle */}
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                  activeTab === tab.key
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+            <Link
+              href="/create-event"
+              className="inline-flex h-fit items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+            >
+              <Plus className="h-4 w-4" />
+              Create New Event
+            </Link>
+          </div>
+
+          {/* Stat cards */}
+          <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {statCards(events).map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-xl border border-border/40 bg-card p-4"
               >
-                {tab.label}
-              </button>
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <p className={`mt-1 text-xl font-bold ${stat.color}`}>
+                  {stat.value}
+                </p>
+              </div>
             ))}
           </div>
 
-          <div className="flex items-center gap-1 rounded-lg border border-border/40 p-1">
-            <button
-              onClick={() => setView("table")}
-              aria-label="Table view"
-              className={`rounded-md p-1.5 transition-colors ${
-                view === "table"
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <LayoutList className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setView("grid")}
-              aria-label="Grid view"
-              className={`rounded-md p-1.5 transition-colors ${
-                view === "grid"
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
+          {/* Tabs + view toggle */}
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    activeTab === tab.key
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-        {/* Content */}
-        {loading ? (
-          <div className="rounded-2xl border border-border/40 bg-card p-12 text-center text-sm text-muted-foreground">
-            Loading your events...
+            <div className="flex items-center gap-1 rounded-lg border border-border/40 p-1">
+              <button
+                onClick={() => setView("table")}
+                aria-label="Table view"
+                className={`rounded-md p-1.5 transition-colors ${
+                  view === "table"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LayoutList className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setView("grid")}
+                aria-label="Grid view"
+                className={`rounded-md p-1.5 transition-colors ${
+                  view === "grid"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-        ) : filteredEvents.length === 0 ? (
-          <div className="rounded-2xl border border-border/40 bg-card p-12 text-center text-sm text-muted-foreground">
-            No events here yet.
-          </div>
-        ) : view === "table" ? (
-          <div className="overflow-x-auto rounded-2xl border border-border/40 bg-card">
-            <table className="w-full min-w-180 text-left text-sm">
-              <thead>
-                <tr className="border-b border-border/40 text-xs text-muted-foreground">
-                  <th className="px-5 py-3 font-medium">Event</th>
-                  <th className="px-5 py-3 font-medium">Date</th>
-                  <th className="px-5 py-3 font-medium">Tickets</th>
-                  <th className="px-5 py-3 font-medium">Revenue</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                  <th className="px-5 py-3 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredEvents.map((event) => {
-                  const percentSold = Math.round(
-                    (event.ticketsSold / event.ticketsTotal) * 100,
-                  );
-                  return (
-                    <tr
-                      key={event.id}
-                      className="border-b border-border/40 last:border-0"
-                    >
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
-                            <Image
-                              src={event.image}
-                              alt={event.title}
-                              fill
-                              className="object-cover"
-                            />
+
+          {/* Content */}
+          {loading ? (
+            <div className="rounded-2xl border border-border/40 bg-card p-12 text-center text-sm text-muted-foreground">
+              Loading your events...
+            </div>
+          ) : filteredEvents.length === 0 ? (
+            <div className="rounded-2xl border border-border/40 bg-card p-12 text-center text-sm text-muted-foreground">
+              No events here yet.
+            </div>
+          ) : view === "table" ? (
+            <div className="overflow-x-auto rounded-2xl border border-border/40 bg-card">
+              <table className="w-full min-w-180 text-left text-sm">
+                <thead>
+                  <tr className="border-b border-border/40 text-xs text-muted-foreground">
+                    <th className="px-5 py-3 font-medium">Event</th>
+                    <th className="px-5 py-3 font-medium">Date</th>
+                    <th className="px-5 py-3 font-medium">Tickets</th>
+                    <th className="px-5 py-3 font-medium">Revenue</th>
+                    <th className="px-5 py-3 font-medium">Status</th>
+                    <th className="px-5 py-3 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredEvents.map((event) => {
+                    const percentSold = Math.round(
+                      (event.ticketsSold / event.ticketsTotal) * 100,
+                    );
+                    return (
+                      <tr
+                        key={event.id}
+                        className="border-b border-border/40 last:border-0"
+                      >
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
+                              <Image
+                                src={event.image}
+                                alt={event.title}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {event.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {event.location}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-foreground">
-                              {event.title}
+                        </td>
+                        <td className="px-5 py-4 text-muted-foreground">
+                          {event.date}
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="w-28">
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                              <div
+                                className="h-full rounded-full bg-emerald-500"
+                                style={{ width: `${percentSold}%` }}
+                              />
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {event.ticketsSold}/{event.ticketsTotal} sold
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              {event.location}
-                            </p>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-muted-foreground">
-                        {event.date}
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="w-28">
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                            <div
-                              className="h-full rounded-full bg-emerald-500"
-                              style={{ width: `${percentSold}%` }}
-                            />
+                        </td>
+                        <td className="px-5 py-4 font-medium text-foreground">
+                          ${event.revenue.toLocaleString()}.00
+                        </td>
+                        <td className="px-5 py-4">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                              statusStyles[event.status]
+                            }`}
+                          >
+                            {event.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <Link
+                              href={`/explore/${event.id}`}
+                              aria-label={`View ${event.title}`}
+                              className="text-muted-foreground transition-colors hover:text-emerald-600 dark:hover:text-emerald-400"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Link>
+                            <button
+                              onClick={() => handleDelete(event.id)}
+                              aria-label={`Delete ${event.title}`}
+                              className="text-muted-foreground transition-colors hover:text-red-600 dark:hover:text-red-400"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {event.ticketsSold}/{event.ticketsTotal} sold
-                          </p>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredEvents.map((event) => {
+                const percentSold = Math.round(
+                  (event.ticketsSold / event.ticketsTotal) * 100,
+                );
+                return (
+                  <div
+                    key={event.id}
+                    className="overflow-hidden rounded-2xl border border-border/40 bg-card"
+                  >
+                    <div className="relative h-32 w-full">
+                      <Image
+                        src={event.image}
+                        alt={event.title}
+                        fill
+                        className="object-cover"
+                      />
+                      <span
+                        className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs font-medium ${
+                          statusStyles[event.status]
+                        }`}
+                      >
+                        {event.status}
+                      </span>
+                    </div>
+                    <div className="p-4">
+                      <p className="font-medium text-foreground">
+                        {event.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {event.location} • {event.date}
+                      </p>
+
+                      <div className="mt-3">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full bg-emerald-500"
+                            style={{ width: `${percentSold}%` }}
+                          />
                         </div>
-                      </td>
-                      <td className="px-5 py-4 font-medium text-foreground">
-                        ${event.revenue.toLocaleString()}.00
-                      </td>
-                      <td className="px-5 py-4">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                            statusStyles[event.status]
-                          }`}
-                        >
-                          {event.status}
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {event.ticketsSold}/{event.ticketsTotal} sold
+                        </p>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="font-medium text-foreground">
+                          ${event.revenue.toLocaleString()}.00
                         </span>
-                      </td>
-                      <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <Link
                             href={`/explore/${event.id}`}
@@ -387,85 +478,15 @@ const ManagePage = () => {
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredEvents.map((event) => {
-              const percentSold = Math.round(
-                (event.ticketsSold / event.ticketsTotal) * 100,
-              );
-              return (
-                <div
-                  key={event.id}
-                  className="overflow-hidden rounded-2xl border border-border/40 bg-card"
-                >
-                  <div className="relative h-32 w-full">
-                    <Image
-                      src={event.image}
-                      alt={event.title}
-                      fill
-                      className="object-cover"
-                    />
-                    <span
-                      className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs font-medium ${
-                        statusStyles[event.status]
-                      }`}
-                    >
-                      {event.status}
-                    </span>
-                  </div>
-                  <div className="p-4">
-                    <p className="font-medium text-foreground">{event.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {event.location} • {event.date}
-                    </p>
-
-                    <div className="mt-3">
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-emerald-500"
-                          style={{ width: `${percentSold}%` }}
-                        />
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {event.ticketsSold}/{event.ticketsTotal} sold
-                      </p>
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="font-medium text-foreground">
-                        ${event.revenue.toLocaleString()}.00
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <Link
-                          href={`/explore/${event.id}`}
-                          aria-label={`View ${event.title}`}
-                          className="text-muted-foreground transition-colors hover:text-emerald-600 dark:hover:text-emerald-400"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(event.id)}
-                          aria-label={`Delete ${event.title}`}
-                          className="text-muted-foreground transition-colors hover:text-red-600 dark:hover:text-red-400"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

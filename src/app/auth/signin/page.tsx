@@ -42,6 +42,21 @@ export default function SignInPage() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      const redirectUrl = searchParams.get("redirect") || "/";
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: redirectUrl,
+      });
+    } catch (error) {
+      console.error("Google login error:", error);
+      toast.error("Google login failed. Please try again.");
+      setIsLoading(false);
+    }
+  };
+
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   return (
@@ -110,6 +125,7 @@ export default function SignInPage() {
 
           {/* Social Sign In - Google only */}
           <button
+            onClick={handleGoogleLogin}
             type="button"
             className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-border/60 rounded-lg hover:bg-muted/50 transition-colors text-foreground/80 font-medium"
           >

@@ -14,11 +14,11 @@ const getBaseURL = () => {
   }
 
   // Server-side or build time fallback
-  return "http://localhost:3000";
+  return process.env.BETTER_AUTH_URL;
 };
 
 export const authClient = createAuthClient({
-  baseURL: getBaseURL(),
+  baseURL: "https://event-hive-client-eight.vercel.app",
   basePath: "/api/auth",
   credentials: "include", // Important: include credentials for cookie-based auth
   plugins: [jwtClient()],

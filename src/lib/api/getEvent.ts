@@ -3,23 +3,9 @@ const baseUrl =
   process.env.NEXT_PUBLIC_URL ||
   "http://localhost:5000";
 
-const buildAuthHeaders = (token?: string) => {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  return headers;
-};
-
-export const getEvent = async (id: string, token?: string) => {
+export const getEvent = async (id: string) => {
   try {
-    const response = await fetch(`${baseUrl}/events/${id}`, {
-      headers: buildAuthHeaders(token),
-    });
+    const response = await fetch(`${baseUrl}/events/${id}`);
     if (!response.ok) {
       throw new Error("Failed to fetch event");
     }
@@ -30,7 +16,7 @@ export const getEvent = async (id: string, token?: string) => {
   }
 };
 
-export const getMyEvents = async (userId?: string | null, token?: string) => {
+export const getMyEvents = async (userId?: string | null) => {
   try {
     const url = userId
       ? `${baseUrl}/events/my-events/${encodeURIComponent(userId)}`
@@ -38,7 +24,9 @@ export const getMyEvents = async (userId?: string | null, token?: string) => {
     console.log("Fetching events from:", url);
     const response = await fetch(url, {
       method: "GET",
-      headers: buildAuthHeaders(token),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     if (!response.ok) {
       const errorData = await response.text();
@@ -53,11 +41,10 @@ export const getMyEvents = async (userId?: string | null, token?: string) => {
   }
 };
 
-export const deleteEvent = async (id: string, token?: string) => {
+export const deleteEvent = async (id: string) => {
   try {
     const response = await fetch(`${baseUrl}/events/${id}`, {
       method: "DELETE",
-      headers: buildAuthHeaders(token),
     });
     if (!response.ok) {
       throw new Error("Failed to delete event");

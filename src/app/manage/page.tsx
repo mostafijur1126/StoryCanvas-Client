@@ -158,14 +158,12 @@ const ManagePage = () => {
     const fetchEvents = async () => {
       setLoading(true);
       try {
-        console.log("Fetching events for userId:", userId);
         if (!userId) {
           console.warn("userId is not available yet, skipping fetch");
           setLoading(false);
           return;
         }
         const res = await getMyEvents(userId);
-        console.log("Events response:", res);
         const payload = Array.isArray(res?.data)
           ? res.data
           : Array.isArray(res)

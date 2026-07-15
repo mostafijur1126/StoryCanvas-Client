@@ -1,12 +1,11 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { getEvent } from "@/lib/api/getEvent";
+import { notFound } from "next/navigation";
 import Image from "next/image";
-import { Calendar, Clock, MapPin, Users, ShieldCheck } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Tag, ShieldCheck } from "lucide-react";
 import TicketWidget from "./TicketWidget";
 import { authClient } from "@/lib/auth-client";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("en-US", {
@@ -22,63 +21,20 @@ const formatTime = (timeStr: string) => {
   return `${hour12}:${m.toString().padStart(2, "0")} ${period}`;
 };
 
-const EventDetailsPage = ({ params }: { params: { id: string } }) => {
-  const router = useRouter();
-  const [data, setData] = useState<any | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+const EventDetailsPage = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
+  // const { token } = await auth.api.getAccessToken({
+  //   headers: await headers(),
+  // });
+  // console.log(token);
+  const { id } = await params;
+  const event = await getEvent(id);
+  const data = event?.data;
 
-  useEffect(() => {
-    const loadEvent = async () => {
-      try {
-        const { data: tokenData } = await authClient.token();
-        const token = tokenData?.token;
-        if (!token) {
-          router.push("/auth/signin");
-          return;
-        }
-
-        const event = await getEvent(params.id, token);
-        if (!event?.data) {
-          setError("Event not found.");
-          return;
-        }
-
-        setData(event.data);
-      } catch (err) {
-        console.error("Failed to load event details:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load event details.",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadEvent();
-  }, [params.id, router]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="rounded-2xl border border-border/40 bg-card p-12 text-center text-sm text-muted-foreground">
-          Loading event details...
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="rounded-2xl border border-border/40 bg-card p-12 text-center text-sm text-muted-foreground">
-          {error || "Event not found."}
-        </div>
-      </div>
-    );
-  }
+  if (!data) notFound();
 
   const dateRange =
     data.startDate === data.endDate

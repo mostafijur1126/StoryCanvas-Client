@@ -1,3 +1,4 @@
+import { jwtClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
 // Get the base URL - use environment variable or current origin
@@ -20,4 +21,5 @@ export const authClient = createAuthClient({
   baseURL: getBaseURL(),
   basePath: "/api/auth",
   credentials: "include", // Important: include credentials for cookie-based auth
+  plugins: [jwtClient()],
 });

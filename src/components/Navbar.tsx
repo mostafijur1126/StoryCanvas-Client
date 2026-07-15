@@ -101,16 +101,6 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link
-                  href="/profile"
-                  className={`font-medium transition-colors ${
-                    isActive("/profile")
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-foreground/80 hover:text-emerald-600 dark:hover:text-emerald-400"
-                  }`}
-                >
-                  Profile
-                </Link>
                 <button
                   onClick={handleLogout}
                   className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors"
@@ -190,19 +180,6 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <li className="mt-2 pt-2 border-t border-border/40">
-                  <Link
-                    href="/profile"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`block w-full py-2 px-3 rounded-lg text-center font-medium transition-colors ${
-                      isActive("/profile")
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-foreground/80 hover:text-emerald-600 dark:hover:text-emerald-400"
-                    }`}
-                  >
-                    Profile
-                  </Link>
-                </li>
                 <li>
                   <button
                     onClick={() => {

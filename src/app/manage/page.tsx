@@ -140,16 +140,7 @@ const statCards = (events: ManagedEvent[]) => {
   ];
 };
 
-const tabs = [
-  { key: "all", label: "All Events" },
-  { key: "upcoming", label: "Upcoming" },
-  { key: "past", label: "Past" },
-] as const;
-
-type TabKey = (typeof tabs)[number]["key"];
-
 const ManagePage = () => {
-  const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [view, setView] = useState<"table" | "grid">("table");
   const [loading, setLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
@@ -203,10 +194,7 @@ const ManagePage = () => {
     };
   }, [userId]);
 
-  const filteredEvents =
-    activeTab === "all"
-      ? events
-      : events.filter((e) => e.timeframe === activeTab);
+  const filteredEvents = events;
 
   const handleDelete = async (id: string) => {
     const confirmed = window.confirm("Delete this event?");
@@ -264,24 +252,8 @@ const ManagePage = () => {
             ))}
           </div>
 
-          {/* Tabs + view toggle */}
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                    activeTab === tab.key
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
+          {/* View toggle */}
+          <div className="mb-4 flex items-center justify-end">
             <div className="flex items-center gap-1 rounded-lg border border-border/40 p-1">
               <button
                 onClick={() => setView("table")}

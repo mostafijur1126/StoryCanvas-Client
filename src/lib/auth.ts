@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
+import { jwt } from "better-auth/plugins";
 
 const mongoUri =
   process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/event-hive";
@@ -34,9 +35,10 @@ export const auth = betterAuth({
   ],
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // update session age every 24 hours
+    maxAge: 60 * 24 * 30, // update session age every 24 hours
     cookieCache: {
       enabled: true,
     },
   },
+  plugins: [jwt()],
 });

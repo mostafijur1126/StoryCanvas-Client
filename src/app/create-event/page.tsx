@@ -18,6 +18,7 @@ import { useSessionClient } from "@/core/session";
 import { EventFormData, emptyEventFormData, Visibility } from "@/types/event";
 import { router } from "better-auth/api";
 import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
 const STEPS = ["Basic Info", "Logistics", "Details & Media", "Pricing"];
 
@@ -78,11 +79,15 @@ export default function CreateEventPage() {
       createdBy: session?.user?.id || session?.user?.email || "anonymous",
       createdAt: new Date().toISOString(),
     };
-
+    const { data: token } = await authClient.token();
+    // console.log(data);
     // ---- This is where you will call your POST API later ----
     const result = await fetch(`${baseUrl}/events`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `Bearer ${token?.token}`,
+      },
       body: JSON.stringify(payload),
     });
     await result.json();
